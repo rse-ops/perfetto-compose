@@ -2,7 +2,9 @@ name: perfetto build and deploy
 on:
   # Build on push to any branch
   pull_request: []
-  push: []
+  push:
+    branches:
+      - main
 
 jobs:
   deploy-images:
