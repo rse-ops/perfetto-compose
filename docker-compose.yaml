@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  perfetto:
+    build: ./
+    entrypoint: /bin/bash /entrypoint.sh
+    container_name: perfetto
+    volumes:
+      - web-data:/opt/perfetto/ui/out/dist
+
+  ingress:
+    image: nginx
+    container_name: nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    restart: unless-stopped
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - web-data:/usr/share/nginx/html
+
+volumes:
+  web-data:
+
