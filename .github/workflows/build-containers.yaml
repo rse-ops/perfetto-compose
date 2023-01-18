@@ -1,0 +1,74 @@
+name: perfetto build and deploy
+on:
+  # Build on push to any branch
+  pull_request: []
+  push: []
+
+jobs:
+  deploy-images:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Leave open to allow other arches
+        dockerfile: [[Dockerfile, linux/amd64, '']]
+
+    name: Build ${{ matrix.dockerfile[0] }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set Container Tag
+      run: |
+        branch=$(echo ${GITHUB_REF##*/})
+        printf "Branch is ${branch}\n"
+        tagged="ghcr.io/rse-ops/perfetto:${branch}${{ matrix.dockerfile[2] }}"
+        if [[ "${branch}" == "main" ]]; then
+            container="ghcr.io/rse-ops/perfetto:latest${{ matrix.dockerfile[2] }}"
+        else
+            container=${tagged}
+        fi
+        echo "container=${container}" >> $GITHUB_ENV
+        echo "branch=${branch}" >> $GITHUB_ENV
+        echo "tagged=${tagged}" >> $GITHUB_ENV
+
+    - name: Log in to GitHub packages
+      if: github.event_name == 'push'
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Inspect Container Names
+      run: |
+        printf "Tagged: ${tagged}\n"        
+        printf "Container: ${container}\n"  
+
+    - name: Build
+      uses: docker/build-push-action@v3
+      if: github.event_name != 'push'
+      with:
+        file: ${{matrix.dockerfile[0]}}
+        platforms: ${{ matrix.dockerfile[1] }}
+        push: false
+        tags: |
+          ${{ env.container }}
+          ${{ env.tagged }}
+
+    - name: Build & Deploy
+      uses: docker/build-push-action@v3
+      if: github.event_name == 'push'
+      with:
+        file: ${{matrix.dockerfile[0]}}
+        platforms: ${{ matrix.dockerfile[1] }}
+        push: true
+        tags: |
+          ${{ env.container }}
+          ${{ env.tagged }}

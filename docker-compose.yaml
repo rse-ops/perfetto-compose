@@ -2,6 +2,8 @@ version: '3.8'
 services:
   perfetto:
     build: ./
+    # Uncomment this and comment build to use image
+    # image: ghcr.io/rse-ops/perfetto:latest
     entrypoint: /bin/bash /entrypoint.sh
     container_name: perfetto
     volumes:
