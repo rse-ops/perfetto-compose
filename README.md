@@ -95,5 +95,5 @@ $ docker volume rm perfetto_web-data
 ### Support
 
 Need help? [Let us know](https://github.com/rse-ops/perfetto-compose/issues). E.g.,
-for the HPC use case this could be modified to run with [Singularity Compose](singularityhub.github.io/singularity-compose/).
+for the HPC use case this could be modified to run with [Singularity Compose](https://singularityhub.github.io/singularity-compose/).
 or plain Singularity. 
